@@ -6,14 +6,14 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
-        GameManager.Instance.StateChanged += OnStateChanged;
-        GameManager.Instance.StateElapsedTimeChanged += OnStateElapsedTimeChanged;
+        GameManager.Instance.OnStateChanged += OnStateChanged;
+        GameManager.Instance.OnStateElapsedTimeChanged += OnStateElapsedTimeChanged;
     }
     
     private void OnDestroy()
     {
-        GameManager.Instance.StateChanged -= OnStateChanged;
-        GameManager.Instance.StateElapsedTimeChanged -= OnStateElapsedTimeChanged;
+        GameManager.Instance.OnStateChanged -= OnStateChanged;
+        GameManager.Instance.OnStateElapsedTimeChanged -= OnStateElapsedTimeChanged;
     }
 
     private void OnStateChanged(GameState state)

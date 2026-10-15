@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Serialization;
 using UnityEngine;
 
 public enum GameState
@@ -12,8 +13,8 @@ public sealed class GameManager : Singleton<GameManager>
     private const float MinimumStateDuration = 0.01f;
 
     [Header("State timing")]
-    [SerializeField, Min(MinimumStateDuration)] private float surfaceRestDuration = 10f;
-    [SerializeField, Min(MinimumStateDuration)] private float divingActivityDuration = 20f;
+    [FormerlySerializedAs("surfaceRestDuration")] public float surfaceDuration = 10f;
+    [FormerlySerializedAs("divingActivityDuration")] public float diveDuration = 20f;
     [SerializeField] private GameState initialState = GameState.Surface;
 
     private float stateElapsedTime;
@@ -22,9 +23,9 @@ public sealed class GameManager : Singleton<GameManager>
     public float StateElapsedTime => stateElapsedTime;
     public float StateRemainingTime => Mathf.Max(0f, GetStateDuration(CurrentState) - stateElapsedTime);
 
-    public event Action<GameState> StateChanged;
+    public event Action<GameState> OnStateChanged;
 
-    public event Action<float> StateElapsedTimeChanged;
+    public event Action<float> OnStateElapsedTimeChanged;
 
     protected override void Awake()
     {
@@ -35,7 +36,7 @@ public sealed class GameManager : Singleton<GameManager>
     private void Update()
     {
         stateElapsedTime += Time.deltaTime;
-        StateElapsedTimeChanged?.Invoke(stateElapsedTime);
+        OnStateElapsedTimeChanged?.Invoke(stateElapsedTime);
 
         if (stateElapsedTime >= GetStateDuration(CurrentState))
         {
@@ -49,7 +50,7 @@ public sealed class GameManager : Singleton<GameManager>
     {
         CurrentState = state;
         stateElapsedTime = 0f;
-        StateChanged?.Invoke(CurrentState);
+        OnStateChanged?.Invoke(CurrentState);
     }
 
     public void ToggleState()
@@ -62,13 +63,13 @@ public sealed class GameManager : Singleton<GameManager>
     public float GetStateDuration(GameState state)
     {
         return state == GameState.Surface
-            ? Mathf.Max(MinimumStateDuration, surfaceRestDuration)
-            : Mathf.Max(MinimumStateDuration, divingActivityDuration);
+            ? Mathf.Max(MinimumStateDuration, surfaceDuration)
+            : Mathf.Max(MinimumStateDuration, diveDuration);
     }
 
     private void OnValidate()
     {
-        surfaceRestDuration = Mathf.Max(MinimumStateDuration, surfaceRestDuration);
-        divingActivityDuration = Mathf.Max(MinimumStateDuration, divingActivityDuration);
+        surfaceDuration = Mathf.Max(MinimumStateDuration, surfaceDuration);
+        diveDuration = Mathf.Max(MinimumStateDuration, diveDuration);
     }
 }

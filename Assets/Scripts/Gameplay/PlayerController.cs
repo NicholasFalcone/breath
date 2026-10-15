@@ -12,11 +12,12 @@ public sealed class PlayerController : MonoBehaviour
     [SerializeField]
     private float xClamp = 8f;
     [SerializeField] private float returnSpeed = 2f;
-    [SerializeField] private Vector3 surfaceStartPosition;
+    private Vector3 surfaceStartPosition;
     public bool IsActivityAllowed { get; private set; }
 
     private void Awake()
     {
+        surfaceStartPosition = transform.position;
         if (gameManager == null)
         {
             gameManager = FindFirstObjectByType<GameManager>();
@@ -36,7 +37,7 @@ public sealed class PlayerController : MonoBehaviour
             return;
         }
 
-        gameManager.StateChanged += HandleStateChanged;
+        gameManager.OnStateChanged += HandleStateChanged;
         ApplyState(gameManager.CurrentState);
     }
 
@@ -44,7 +45,7 @@ public sealed class PlayerController : MonoBehaviour
     {
         if (gameManager != null)
         {
-            gameManager.StateChanged -= HandleStateChanged;
+            gameManager.OnStateChanged -= HandleStateChanged;
         }
     }
 
