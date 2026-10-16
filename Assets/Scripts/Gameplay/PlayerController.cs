@@ -19,6 +19,7 @@ public sealed class PlayerController : MonoBehaviour
     private void Awake()
     {
         surfaceStartPosition = transform.position;
+        EnsureCoinCollisionSetup();
         if (gameManager == null)
         {
             gameManager = FindFirstObjectByType<GameManager>();
@@ -73,6 +74,48 @@ public sealed class PlayerController : MonoBehaviour
     }
 
 
+
+    private void OnTriggerEnter(Collider other)
+    {
+        Coin coin = other.GetComponentInParent<Coin>();
+        if (coin != null)
+        {
+            coin.Collect();
+        }
+    }
+
+    // Il player non ha fisica nel prefab: serve un Rigidbody cinematico e un collider per ricevere i trigger delle monete.
+    private void EnsureCoinCollisionSetup()
+    {
+        if (!TryGetComponent(out Rigidbody body))
+        {
+            body = gameObject.AddComponent<Rigidbody>();
+        }
+
+        body.isKinematic = true;
+        body.useGravity = false;
+
+        if (GetComponentInChildren<Collider>() != null)
+        {
+            return;
+        }
+
+        Renderer[] renderers = GetComponentsInChildren<Renderer>();
+        Bounds bounds = renderers.Length > 0
+            ? renderers[0].bounds
+            : new Bounds(transform.position, Vector3.one);
+        for (int i = 1; i < renderers.Length; i++)
+        {
+            bounds.Encapsulate(renderers[i].bounds);
+        }
+
+        SphereCollider collider = gameObject.AddComponent<SphereCollider>();
+        collider.isTrigger = true;
+        collider.center = transform.InverseTransformPoint(bounds.center);
+        Vector3 lossyScale = transform.lossyScale;
+        float maxScale = Mathf.Max(Mathf.Abs(lossyScale.x), Mathf.Abs(lossyScale.y), Mathf.Abs(lossyScale.z));
+        collider.radius = Mathf.Max(bounds.extents.x, bounds.extents.y) / Mathf.Max(0.0001f, maxScale);
+    }
 
     private void Update()
     {
