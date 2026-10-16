@@ -398,7 +398,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnderwaterFog
   surfaceY: 0
-  maxDepth: 60
+  maxDepth: 20
   surfaceColor: {r: 0.55, g: 0.85, b: 1, a: 1}
   surfaceFogStart: 10
   surfaceFogEnd: 80

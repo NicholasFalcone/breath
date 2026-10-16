@@ -13,6 +13,7 @@ public sealed class PlayerController : MonoBehaviour
     private float xClamp = 8f;
     [SerializeField] private float returnSpeed = 2f;
     private Vector3 surfaceStartPosition;
+    private bool isAtSurface = true;
     public bool IsActivityAllowed { get; private set; }
 
     private void Awake()
@@ -57,6 +58,10 @@ public sealed class PlayerController : MonoBehaviour
     private void ApplyState(GameState state)
     {
         IsActivityAllowed = state == GameState.Diving;
+        if (IsActivityAllowed)
+        {
+            isAtSurface = false;
+        }
 
         foreach (Behaviour activityBehaviour in activityBehaviours)
         {
@@ -90,8 +95,7 @@ public sealed class PlayerController : MonoBehaviour
         else
         {
             // --- FASE 2: RIPOSO / SUPERFICIE (o Risalita) ---
-            // Se siamo tornati in superficie (o in fase di risalita), riportiamo il sub su
-            if (transform.position.y < surfaceStartPosition.y)
+            if (!isAtSurface)
             {
                 // Muove fluidamente il sub verso l'alto fino alla quota di superficie
                 transform.position = Vector3.MoveTowards(
@@ -99,6 +103,11 @@ public sealed class PlayerController : MonoBehaviour
                     new Vector3(surfaceStartPosition.x, surfaceStartPosition.y, transform.position.z),
                     returnSpeed * Time.deltaTime
                 );
+
+                if (transform.position.y >= surfaceStartPosition.y)
+                {
+                    isAtSurface = true;
+                }
             }
             else
             {
