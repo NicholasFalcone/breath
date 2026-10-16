@@ -31,6 +31,8 @@ public sealed class GameManager : Singleton<GameManager>
 
     public GameState CurrentState { get; private set; }
     public int CoinCount { get; private set; }
+    public int CurrentRepetition => Mathf.Min(completedRepetitions + 1, maximumRepetitions);
+    public int MaximumRepetitions => maximumRepetitions;
     public float StateElapsedTime => stateElapsedTime;
     public float StateRemainingTime => Mathf.Max(0f, GetStateDuration(CurrentState) - stateElapsedTime);
 
@@ -39,6 +41,8 @@ public sealed class GameManager : Singleton<GameManager>
     public event Action<float> OnStateElapsedTimeChanged;
 
     public event Action<int> OnCoinCountChanged;
+
+    public event Action<int, int> OnRepetitionChanged;
 
     public void AddCoins(int amount)
     {
@@ -93,6 +97,7 @@ public sealed class GameManager : Singleton<GameManager>
             }
 
             SetState(GameState.Surface);
+            OnRepetitionChanged?.Invoke(CurrentRepetition, maximumRepetitions);
         }
     }
 

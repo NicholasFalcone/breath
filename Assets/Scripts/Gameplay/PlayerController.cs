@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public sealed class PlayerController : MonoBehaviour
 {
@@ -117,6 +118,34 @@ public sealed class PlayerController : MonoBehaviour
         collider.radius = Mathf.Max(bounds.extents.x, bounds.extents.y) / Mathf.Max(0.0001f, maxScale);
     }
 
+    // Tastiera/gamepad per l'editor, touch/mouse: tenendo premuto si va verso il lato toccato.
+    private static float ReadHorizontalInput()
+    {
+        float value = 0f;
+
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard != null)
+        {
+            if (keyboard.leftArrowKey.isPressed || keyboard.aKey.isPressed) value -= 1f;
+            if (keyboard.rightArrowKey.isPressed || keyboard.dKey.isPressed) value += 1f;
+        }
+
+        Gamepad gamepad = Gamepad.current;
+        if (gamepad != null)
+        {
+            value += gamepad.leftStick.x.ReadValue();
+        }
+
+        Pointer pointer = Pointer.current;
+        if (pointer != null && pointer.press.isPressed && Screen.width > 0)
+        {
+            float normalized = (pointer.position.ReadValue().x - Screen.width * 0.5f) / (Screen.width * 0.25f);
+            value += Mathf.Clamp(normalized, -1f, 1f);
+        }
+
+        return Mathf.Clamp(value, -1f, 1f);
+    }
+
     private void Update()
     {
         if (IsActivityAllowed)
@@ -124,7 +153,7 @@ public sealed class PlayerController : MonoBehaviour
             // --- FASE 1: ATTIVITÀ / IMMERSIONE ---
             // Scende verticalmente e si muove lateralmente
             float verticalMovement = -diveSpeed * Time.deltaTime;
-            float inputX = Input.GetAxis("Horizontal");
+            float inputX = ReadHorizontalInput();
 
             // Esempio movimento orizzontale
             float moveX = inputX * horizontalSpeed * Time.deltaTime;

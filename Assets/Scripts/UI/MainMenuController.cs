@@ -1,6 +1,7 @@
 using System.Globalization;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -39,7 +40,7 @@ public sealed class MainMenuController : MonoBehaviour
 
         if (FindFirstObjectByType<EventSystem>() == null)
         {
-            new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
+            new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
         }
 
         mainPanel = CreatePanel("Main Panel", canvasObject.transform, new Vector2(560f, 440f));
