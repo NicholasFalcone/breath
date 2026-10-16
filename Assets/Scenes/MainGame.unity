@@ -654,7 +654,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WaterSetup
   surfaceY: 0
   size: {x: 200, y: 200}
-  waterColor: {r: 0.2, g: 0.6, b: 0.9, a: 0.35}
+  waterColor: {r: 0.12, g: 0.5, b: 0.85, a: 0.7}
   createOnAwake: 1
 --- !u!4 &1655353307
 Transform:

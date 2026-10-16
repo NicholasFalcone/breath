@@ -20,6 +20,7 @@ public sealed class CameraController3D : MonoBehaviour
     [SerializeField, Range(1f, 179f)] private float divingFieldOfView = 50f;
     [SerializeField, Min(0.01f)] private float transitionSpeed = 3f;
     [SerializeField] private float divingPitch = 8f;
+    [SerializeField] private float surfacePitch = 10f;
 
     private float xVelocity;
     private float yVelocity;
@@ -92,7 +93,7 @@ public sealed class CameraController3D : MonoBehaviour
             targetFieldOfView,
             transitionSpeed * Time.deltaTime);
 
-        Quaternion targetRotation = surfaceRotation * Quaternion.Euler(divingPitch * divingBlend, 0f, 0f);
+        Quaternion targetRotation = surfaceRotation * Quaternion.Euler(Mathf.Lerp(surfacePitch, divingPitch, divingBlend), 0f, 0f);
         transform.rotation = Quaternion.Slerp(
             transform.rotation,
             targetRotation,

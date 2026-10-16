@@ -60,7 +60,7 @@ public static class CoinBubbleEffect
         particles.Play();
     }
 
-    private static Material GetBubbleMaterial()
+    public static Material GetBubbleMaterial()
     {
         if (bubbleMaterial != null)
         {
