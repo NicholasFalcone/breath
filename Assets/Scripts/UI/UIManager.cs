@@ -18,7 +18,7 @@ public class UIManager : MonoBehaviour
 
     private void OnStateChanged(GameState state)
     {
-        radialSlider.Value = state == GameState.Surface ? 0f : 1f;
+        radialSlider.Value = state == GameState.Diving ? 1f : 0f;
     }
 
     private void OnStateElapsedTimeChanged(float elapsedTime)

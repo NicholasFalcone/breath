@@ -15,10 +15,17 @@ public sealed class PlayerController : MonoBehaviour
     [SerializeField] private float returnSpeed = 2f;
     private Vector3 surfaceStartPosition;
     private bool isAtSurface = true;
+    [SerializeField] private Animator animator;
+    private static readonly int DivingHash = Animator.StringToHash("Diving");
     public bool IsActivityAllowed { get; private set; }
 
     private void Awake()
     {
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
+        }
+
         surfaceStartPosition = transform.position;
         EnsureCoinCollisionSetup();
         if (gameManager == null)
@@ -57,9 +64,18 @@ public sealed class PlayerController : MonoBehaviour
         ApplyState(state);
     }
 
+    private Quaternion DivingRotation => Quaternion.Euler(90f, 180f, 0f);
+    private Quaternion SurfaceRotation => Quaternion.Euler(0f, 180f, 0f);
+
     private void ApplyState(GameState state)
     {
         IsActivityAllowed = state == GameState.Diving;
+        if (animator != null)
+        {
+            transform.rotation = IsActivityAllowed ? DivingRotation : SurfaceRotation;
+            animator.SetBool(DivingHash, IsActivityAllowed);
+        }
+
         if (IsActivityAllowed)
         {
             isAtSurface = false;

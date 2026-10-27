@@ -5,12 +5,14 @@ using UnityEngine;
 public enum GameState
 {
     Surface,
-    Diving
+    Diving,
+    Countdown
 }
 
 public sealed class GameManager : Singleton<GameManager>
 {
     private const float MinimumStateDuration = 0.01f;
+    public const float DefaultCountdownDuration = 5f;
     public const float DefaultSurfaceDuration = 10f;
     public const float DefaultDiveDuration = 20f;
     public const int DefaultMaximumRepetitions = 3;
@@ -20,11 +22,10 @@ public sealed class GameManager : Singleton<GameManager>
     private const string MainMenuSceneName = "MainMenu";
 
     [Header("State timing")]
+    [Min(0f)] public float countdownDuration = DefaultCountdownDuration;
     [FormerlySerializedAs("surfaceRestDuration")] public float surfaceDuration = DefaultSurfaceDuration;
     [FormerlySerializedAs("divingActivityDuration")] public float diveDuration = DefaultDiveDuration;
     [Min(1)] public int maximumRepetitions = DefaultMaximumRepetitions;
-    [SerializeField] private GameState initialState = GameState.Surface;
-
     private float stateElapsedTime;
     private int completedRepetitions;
     private bool isReturningToMenu;
@@ -67,7 +68,7 @@ public sealed class GameManager : Singleton<GameManager>
         maximumRepetitions = Mathf.Max(
             1,
             PlayerPrefs.GetInt(MaximumRepetitionsPreferenceKey, maximumRepetitions));
-        SetState(initialState);
+        SetState(countdownDuration > 0f ? GameState.Countdown : GameState.Diving);
     }
 
     private void Update()
@@ -82,9 +83,15 @@ public sealed class GameManager : Singleton<GameManager>
 
         if (stateElapsedTime >= GetStateDuration(CurrentState))
         {
-            if (CurrentState == GameState.Surface)
+            if (CurrentState == GameState.Countdown)
             {
                 SetState(GameState.Diving);
+                return;
+            }
+
+            if (CurrentState == GameState.Diving)
+            {
+                SetState(GameState.Surface);
                 return;
             }
 
@@ -96,7 +103,7 @@ public sealed class GameManager : Singleton<GameManager>
                 return;
             }
 
-            SetState(GameState.Surface);
+            SetState(GameState.Diving);
             OnRepetitionChanged?.Invoke(CurrentRepetition, maximumRepetitions);
         }
     }
@@ -117,9 +124,12 @@ public sealed class GameManager : Singleton<GameManager>
 
     public float GetStateDuration(GameState state)
     {
-        return state == GameState.Surface
-            ? Mathf.Max(MinimumStateDuration, surfaceDuration)
-            : Mathf.Max(MinimumStateDuration, diveDuration);
+        return state switch
+        {
+            GameState.Countdown => Mathf.Max(MinimumStateDuration, countdownDuration),
+            GameState.Surface => Mathf.Max(MinimumStateDuration, surfaceDuration),
+            _ => Mathf.Max(MinimumStateDuration, diveDuration)
+        };
     }
 
     private void OnValidate()

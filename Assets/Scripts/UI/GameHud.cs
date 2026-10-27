@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public sealed class GameHud : MonoBehaviour
 {
     private const int CircleTextureSize = 64;
+    private const string MainMenuSceneName = "MainMenu";
 
     [SerializeField] private RectTransform radialSlider;
     [SerializeField] private Vector2 referenceResolution = new Vector2(1080f, 1920f);
@@ -15,6 +16,8 @@ public sealed class GameHud : MonoBehaviour
     private RectTransform safeAreaRoot;
     private Text coinText;
     private Text repetitionText;
+    private Text countdownText;
+    private GameObject pausePanel;
     private Rect lastSafeArea;
     private Vector2Int lastScreenSize;
     private GameManager gameManager;
@@ -41,6 +44,7 @@ public sealed class GameHud : MonoBehaviour
 
     private void OnDestroy()
     {
+        Time.timeScale = 1f;
         if (gameManager != null)
         {
             gameManager.OnCoinCountChanged -= SetCoins;
@@ -50,6 +54,7 @@ public sealed class GameHud : MonoBehaviour
 
     private void Update()
     {
+        UpdateCountdown();
         if (Screen.safeArea != lastSafeArea || lastScreenSize.x != Screen.width || lastScreenSize.y != Screen.height)
         {
             ApplySafeArea();
@@ -79,6 +84,8 @@ public sealed class GameHud : MonoBehaviour
 
         repetitionText = CreateCounter("RepetitionCounter", new Vector2(1f, 1f), new Vector2(-margin, -margin), false, out Image repetitionIcon);
         repetitionIcon.gameObject.SetActive(false);
+        CreateCountdownLabel();
+        BuildPauseUi();
 
         if (radialSlider != null)
         {
@@ -183,6 +190,112 @@ public sealed class GameHud : MonoBehaviour
     private void SetRepetition(int current, int maximum)
     {
         repetitionText.text = $"Ripetuta {current}/{maximum}";
+    }
+
+    private void BuildPauseUi()
+    {
+        Button pauseButton = CreateButton("PauseButton", safeAreaRoot, "II", 56, new Vector2(110f, 110f));
+        RectTransform pauseRect = (RectTransform)pauseButton.transform;
+        pauseRect.anchorMin = pauseRect.anchorMax = pauseRect.pivot = new Vector2(1f, 1f);
+        pauseRect.anchoredPosition = new Vector2(-margin, -margin - 120f);
+        pauseButton.onClick.AddListener(Pause);
+
+        pausePanel = new GameObject("PausePanel", typeof(RectTransform), typeof(Image));
+        RectTransform panelRect = (RectTransform)pausePanel.transform;
+        panelRect.SetParent(transform, false);
+        panelRect.anchorMin = Vector2.zero;
+        panelRect.anchorMax = Vector2.one;
+        panelRect.offsetMin = panelRect.offsetMax = Vector2.zero;
+        pausePanel.GetComponent<Image>().color = new Color(0f, 0.05f, 0.1f, 0.8f);
+
+        Text title = CreateLabel(panelRect);
+        title.text = "PAUSA";
+        title.fontSize = 90;
+        SetCentered(title.rectTransform, new Vector2(800f, 140f), new Vector2(0f, 260f));
+
+        Button resume = CreateButton("ResumeButton", panelRect, "RIPRENDI", 48, new Vector2(620f, 130f));
+        SetCentered((RectTransform)resume.transform, new Vector2(620f, 130f), new Vector2(0f, 40f));
+        resume.onClick.AddListener(Resume);
+
+        Button menu = CreateButton("MenuButton", panelRect, "MENU PRINCIPALE", 48, new Vector2(620f, 130f));
+        SetCentered((RectTransform)menu.transform, new Vector2(620f, 130f), new Vector2(0f, -130f));
+        menu.onClick.AddListener(ReturnToMenu);
+
+        pausePanel.SetActive(false);
+    }
+
+    private static void SetCentered(RectTransform rect, Vector2 size, Vector2 position)
+    {
+        rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.sizeDelta = size;
+        rect.anchoredPosition = position;
+    }
+
+    private static Button CreateButton(string objectName, Transform parent, string label, int fontSize, Vector2 size)
+    {
+        GameObject buttonObject = new GameObject(objectName, typeof(RectTransform), typeof(Image), typeof(Button));
+        RectTransform rect = (RectTransform)buttonObject.transform;
+        rect.SetParent(parent, false);
+        rect.sizeDelta = size;
+
+        Image image = buttonObject.GetComponent<Image>();
+        image.sprite = CreatePillSprite();
+        image.type = Image.Type.Sliced;
+        image.color = new Color(0.1f, 0.4f, 0.6f, 0.9f);
+
+        Text text = CreateLabel(rect);
+        text.text = label;
+        text.fontSize = fontSize;
+        text.rectTransform.anchorMin = Vector2.zero;
+        text.rectTransform.anchorMax = Vector2.one;
+        text.rectTransform.offsetMin = text.rectTransform.offsetMax = Vector2.zero;
+        return buttonObject.GetComponent<Button>();
+    }
+
+    private void Pause()
+    {
+        Time.timeScale = 0f;
+        pausePanel.SetActive(true);
+    }
+
+    private void Resume()
+    {
+        Time.timeScale = 1f;
+        pausePanel.SetActive(false);
+    }
+
+    private void ReturnToMenu()
+    {
+        Time.timeScale = 1f;
+        UnityEngine.SceneManagement.SceneManager.LoadScene(MainMenuSceneName);
+    }
+
+    private void CreateCountdownLabel()
+    {
+        countdownText = CreateLabel(safeAreaRoot);
+        countdownText.gameObject.name = "Countdown";
+        countdownText.fontSize = 260;
+        countdownText.gameObject.AddComponent<Outline>().effectDistance = new Vector2(6f, -6f);
+        RectTransform rect = countdownText.rectTransform;
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.6f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.sizeDelta = new Vector2(600f, 400f);
+        rect.anchoredPosition = Vector2.zero;
+        countdownText.gameObject.SetActive(false);
+    }
+
+    private void UpdateCountdown()
+    {
+        bool active = gameManager != null && gameManager.CurrentState == GameState.Countdown;
+        if (countdownText.gameObject.activeSelf != active)
+        {
+            countdownText.gameObject.SetActive(active);
+        }
+
+        if (active)
+        {
+            countdownText.text = Mathf.CeilToInt(gameManager.StateRemainingTime).ToString();
+        }
     }
 
     private static Sprite CreateCircleSprite(Color fill, Color rim)
